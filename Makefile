@@ -9,7 +9,7 @@ LUA_INC = -I$(LUA_PATH)
 TARGET = qstable.so
 
 # Source files
-SRCS = qstable.c qbuf.c qbarray.c
+SRCS = qstable.c qbarray.c
 OBJS = $(SRCS:.c=.o)
 
 # Default target

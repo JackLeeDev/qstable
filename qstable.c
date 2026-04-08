@@ -411,7 +411,9 @@ static int32_t convert_table(lua_State *L, int32_t stack, shm_config* shmcfg, co
 }
 
 static inline int32_t int64_compare(const void* a, const void* b) {
-	return *(int64_t*)a - *(int64_t*)b;
+	int64_t va = *(const int64_t*)a;
+	int64_t vb = *(const int64_t*)b;
+	return (va > vb) ? 1 : (va < vb) ? -1 : 0;
 }
 
 static inline int32_t double_compare(const void* a, const void* b) {
@@ -443,7 +445,7 @@ static int32_t lnew(lua_State *L) {
 	
 	qbarray_init(&loader->iarray, sizeof(int64_t), 0, int64_compare);
 	qbarray_init(&loader->darray, sizeof(double), 0, double_compare);
-	qbarray_init(&loader->sarray, sizeof(double), 0, string_compare);
+	qbarray_init(&loader->sarray, sizeof(const char*), 0, string_compare);
 	int32_t i;
 	for (i=0; i<TABLE_HNODE_SIZE; i++) {
 		qbarray_init(&loader->tarray[i], sizeof(qstable_hnode), 0, NULL);
@@ -735,7 +737,13 @@ static int32_t lupdate(lua_State *L) {
 		else {
 			qbarray_insert(&g_ctx.cfg, &cfg);
 		}
-		qbarray_insert(&g_ctx.sorted_cfg, &cfg);
+		config* scfg = qbarray_find(&g_ctx.sorted_cfg, &cfg);
+		if (scfg) {
+			*scfg = cfg;
+		}
+		else {
+			qbarray_insert(&g_ctx.sorted_cfg, &cfg);
+		}
 
 		lua_pop(L, 1);
 	}

@@ -925,6 +925,7 @@ static int32_t lshmat(lua_State *L) {
 
 	struct shmid_ds shm_info;
 	if (shmctl(shm_id, IPC_STAT, &shm_info) == -1) {
+		shmdt(shconf);
 		return 0;
 	}
 

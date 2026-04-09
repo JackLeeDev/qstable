@@ -51,6 +51,10 @@ typedef struct qstable_hnode {
 
 typedef struct shm_config {
 	uint64_t magic;
+	uint32_t pid;
+	int64_t time;
+	char hash[MAX_HASH_SIZE];
+	char name[MAX_NAME_SIZE];
 	int32_t iarray_pos;
 	int32_t iarray_size;
 	int32_t darray_pos;
@@ -62,10 +66,6 @@ typedef struct shm_config {
 	int32_t tarray_size;
 	int32_t table_data_pos;
 	int32_t mem_size;
-	uint32_t pid;
-	int64_t time;
-	char hash[MAX_HASH_SIZE];
-	char name[MAX_NAME_SIZE];
 } shm_config;
 
 typedef struct config {
@@ -641,11 +641,11 @@ static inline int32_t try_push_value(lua_State *L, shm_config* shmcfg, qxtable* 
 
 shm_config* get_conf(qxtable* tb) {
 	assert(tb);
-	shm_config* shmcfg = NULL;
-	rwlock_rlock(&g_ctx.lock);
 	config tmp;
 	tmp.saddr = (int64_t)tb;
 	tmp.eaddr = tmp.saddr;
+	shm_config* shmcfg = NULL;
+	rwlock_rlock(&g_ctx.lock);
 	config* cfg = (config*)qbarray_find(&g_ctx.sorted_cfg, &tmp);
 	if (cfg) {
 		shmcfg = cfg->shmcfg;
@@ -815,7 +815,7 @@ static int32_t llen(lua_State *L) {
 static int32_t lnext(lua_State *L) {
 	qxtable* tb = (qxtable*)lua_touserdata(L, 1);
 	if (!tb) {
-		luaL_error(L, "Invalid tbable");
+		luaL_error(L, "Invalid table");
 	}
 
 	shm_config* shmcfg = get_conf(tb);
@@ -1010,7 +1010,7 @@ static int32_t lshmsave(lua_State *L) {
 static int32_t lget_conf(lua_State *L) {
 	qxtable* tb = (qxtable*)lua_touserdata(L, 1);
 	if (!tb) {
-		luaL_error(L, "Invalid tbable");
+		luaL_error(L, "Invalid table");
 	}
 	shm_config* shmcfg = get_conf(tb);
 	if (!shmcfg) {

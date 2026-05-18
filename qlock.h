@@ -19,16 +19,14 @@ typedef volatile int32_t rwlock_t;
 #define rwlock_init(ptr) *ptr=0;
 #define rwlock_rlock(ptr) do { \
     while (1) { \
-        int32_t val = ATOM_FETCH_INC(ptr); \
-        if (val >= 0) break; \
-        ATOM_FETCH_DEC(ptr); \
+        int32_t val = *(ptr); \
+        if (val >= 0 && ATOM_CAS(ptr, val, val + 1)) break; \
     }} while(0)
 #define rwlock_runlock(ptr) ATOM_FETCH_DEC(ptr);
 #define rwlock_wlock(ptr) do { \
     while (1) { \
-        int32_t val = *ptr; \
-        if (val == 0 && ATOM_CAS(ptr, 0, -1)) break; \
+        if (ATOM_CAS(ptr, 0, -1)) break; \
     }} while(0)
-#define rwlock_wunlock(ptr) ATOM_CAS(ptr, -1, 0);
+#define rwlock_wunlock(ptr) ATOM_CAS(ptr, -1, 0)
 
 #endif
